@@ -6,20 +6,19 @@ This MERN stack application is designed to manage a building's shops, owners, an
 
 ### User Roles:
 #### Admin:
-* Manage buildings, floors, and shops.
+* Manage shops.
 * Assign and remove shop owners.
 * Set and modify rent amounts.
-* View and manage payment history.
 * Configure system settings.
 #### Shop Owner:
-View and manage their owned shops.
-Make payments for their shops.
-Receive payment confirmations and reminders.
+* View and manage their owned shops.
+* Make payments for their shops.
+* Receive payment confirmations and reminders.
 
 ### Core Functionalities:
 * Shop Management: Create, edit, and delete shops.
 * Owner Management: Create, edit, and delete owners.
-* Payment Management: Process payments, generate receipts, and track payment history.
+* Payment Management: Process payments and generate receipts.
 * User Authentication and Authorization: Securely authenticate and authorize users.
 * Email Notifications: Send email notifications for payment reminders, payment confirmations, and other important updates.
 
