@@ -1,4 +1,6 @@
 import React from 'react'
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import Login from '../pages/Login.jsx';
 
 const Hero = () => {
   return (
@@ -10,7 +12,7 @@ const Hero = () => {
           <p className="text-2xl font-semibold py-6">
             Your one-stop shop for all your commercial needs!
           </p>
-          <button className="btn btn-lg btn-primary">Own Shop Now!</button>
+          <button className="btn btn-lg btn-primary"><Link to="/login" element={<Login/>}>Own Shop Now!</Link></button>
         </div>
       </div>
     </div>
