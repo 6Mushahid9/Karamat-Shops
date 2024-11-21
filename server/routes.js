@@ -1,7 +1,27 @@
 import express from 'express';
 import Shop from './Shop.js';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = express.Router();
+
+// Authenticate Owner
+router.post('/login', (req, res) => {
+  console.log(req.body);
+  const { email, password } = req.body;
+
+  // Check if provided credentials match the ones in .env
+  if (email !== process.env.OWNER_EMAIL || password !== process.env.OWNER_PASSWORD) {
+    return res.status(400).json({ message: 'Invalid email or password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+  res.status(200).json({ message: 'Login successful', token });
+});
 
 // Get all shops of a specific floor
 router.get('/shops/floor', async (req, res) => {
@@ -21,40 +41,67 @@ router.get('/shops/floor', async (req, res) => {
     }
   });
 
-// Get all details of a particular shop by ID
-router.get('/shops/details/:id', async (req, res) => {
-    try {
-      const shop = await Shop.findById(req.params.id);
-      if (!shop) return res.status(404).json({ message: 'Shop not found' });
-      res.status(200).json(shop);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching shop details', error });
-    }
-  });
 
-  // Get all details of a particular shop by shopNumuber
-  router.get('/shops/details/number/:shopNumber', async (req, res) => {
-    try {
-      const shop = await Shop.findOne({ shopNumber: req.params.shopNumber });
-      if (!shop) return res.status(404).json({ message: 'Shop not found' });
-      res.status(200).json(shop);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching shop details', error });
+// Filters
+router.get('/shops/details', async (req, res) => {
+  const { 
+    shopNumber, 
+    shopName, 
+    ownerName, 
+    ownerNumber, 
+    ownerEmail, 
+    amountDue 
+  } = req.query;
+
+  try {
+    // Build the query object dynamically based on the provided query params
+    let query = {};
+
+    // Filter by shop number (exact match)
+    if (shopNumber) {
+      query.shopNumber = shopNumber;
     }
+
+    // Filter by shop name (exact match)
+    if (shopName) {
+      query.shopName = { $regex: shopName, $options: 'i' }; // Case-insensitive search
+    }
+
+    // Filter by owner name (exact match)
+    if (ownerName) {
+      query['owner.name'] = { $regex: ownerName, $options: 'i' }; // Case-insensitive search
+    }
+
+    // Filter by owner number (exact match)
+    if (ownerNumber) {
+      query['owner.number'] = ownerNumber;
+    }
+
+    // Filter by owner email (exact match)
+    if (ownerEmail) {
+      query['owner.email'] = { $regex: ownerEmail, $options: 'i' }; // Case-insensitive search
+    }
+
+    // Filter by amount due greater than 0
+    if (amountDue === 'true') { // Expecting string 'true' to filter
+      query.amountDue = { $gt: 0 }; // Amount due greater than 0
+    }
+
+    // Fetch shops based on the constructed query
+    const shops = await Shop.find(query);
+
+    if (shops.length === 0) {
+      return res.status(404).json({ message: 'No shops found' });
+    }
+
+    res.status(200).json(shops); // Return the filtered shops
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching shop details', error });
+  }
 });
 
-  // Get all details of a particular shop by Owner name
-router.get('/shops/details/owner/:ownerName', async (req, res) => {
-    try {
-      const shops = await Shop.find({ 'owner.name': req.params.ownerName });
-      if (shops.length === 0) return res.status(404).json({ message: 'No shops found for this owner' });
-      res.status(200).json(shops);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching shop details', error });
-    }
-});
 
-  // Change amounts (total, paid, and due)
+// Change amounts (total, paid, and due)
 router.put('/shops/change-amounts/:id', async (req, res) => {
     const { totalAmount, amountPaid, amountDue } = req.body;
     try {
@@ -70,7 +117,7 @@ router.put('/shops/change-amounts/:id', async (req, res) => {
     }
   });
 
-  // Edit details of the owner
+// Edit details of the owner
 router.put('/shops/edit-owner/:id', async (req, res) => {
     const { name, number, address, email, shopsOwned } = req.body;
     try {
@@ -94,7 +141,7 @@ router.put('/shops/edit-owner/:id', async (req, res) => {
     }
   });
   
-  // Clear and reset all details of a shop
+// Clear and reset all details of a shop
 router.put('/shops/reset/:id', async (req, res) => {
     try {
       const resetShop = await Shop.findByIdAndUpdate(

@@ -5,14 +5,11 @@ import mongoose from 'mongoose';
 import Shop from './Shop.js';
 import routes from "./routes.js"
 dotenv.config(); // Load environment variables
-const app = express();
+const app = express()
 
-app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL in production
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
-  }));
-
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true })); 
 app.use(routes)
 
 app.get('/', (req, res) => {
